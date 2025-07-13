@@ -46,42 +46,87 @@ typedef long long int ll;
 #define PI 3.1415926535897932384626433832795
 #define EPS 1e-9
 
+int modexp(int a, int b) {
+    int res = 1;
+    a %= mod;
+    while(b > 0) {
+        if(b & 1)
+            res = (res * a) % mod;
+        a = (a * a) % mod;
+        b >>= 1;
+    }
+    return res;
+}
+
+vector<int> fact, invfact;
+void precomp(int n) {
+    fact.resize(n + 1);
+    invfact.resize(n + 1);
+    fact[0] = 1;
+    for (int i = 1; i <= n; i++) {
+        fact[i] = (fact[i - 1] * i) % mod;
+    }
+    invfact[n] = modexp(fact[n], mod - 2);
+    for (int i = n - 1; i >= 0; i--) {
+        invfact[i] = (invfact[i + 1] * (i + 1)) % mod;
+    }
+}
+
+bool check_prefix_and_middle(vi &arr, int n){
+    vi suf(n), minsuf(n);
+    suf[n-1] = minsuf[n-1] = arr[n-1];
+    for(int i=n-2;i>=0;i--){
+        suf[i]=suf[i+1]+arr[i];
+        minsuf[i]=min(minsuf[i+1],suf[i]);
+    }
+    int s=0;
+    for(int i=0;i+2<n;i++){
+        s+=arr[i];
+        if(s<0)
+            continue;
+        if(suf[i+1]>=minsuf[i+2])
+            return true;
+    }
+    return false;
+}
+
 void solve(){
-    int n, k;
+    int n , k;
     cin >> n >> k;
-    vi arr(n), b(n), ps(n), suffixMax(n), pmin(n);
-    rep(i, n) cin >> arr[i];
-    rep(i, n) b[i] = arr[i] <= k ? 1 : -1;
-    ps[0] = b[0];
-    f(i, 1, n) ps[i] = ps[i-1] + b[i];
-    suffixMax[n-1] = ps[n-1];
-    for(int i = n-2; i >= 0; i--) suffixMax[i] = max(ps[i], suffixMax[i+1]);
-    pmin[0] = ps[0];
-    f(i, 1, n) pmin[i] = min(pmin[i-1], ps[i]);
-    bool found = false;
-    rep(i, n-2){
-        if(ps[i] >= 0 && suffixMax[i+1] >= ps[i]){
-            found = true;
+    vi arr(n);
+    rep(i , n) cin >> arr[i];
+    rep(i , n) if(arr[i]<=k) arr[i]=1; else arr[i]=-1;
+
+    int a=n, b=-1, s=0;
+    rep(i,n){
+        s+=arr[i];
+        if(s>=0){
+            a=i;
             break;
         }
     }
-    if(!found){
-        rep(i, n-2){
-            if(ps[i] >= 0 && ps[n-1] - ps[i] >= 0){
-                found = true;
-                break;
-            }
+    s=0;
+    for(int i=n-1;i>=0;i--){
+        s+=arr[i];
+        if(s>=0){
+            b=i;
+            break;
         }
     }
-    if(!found){
-        f(i, 1, n-1){
-            if(ps[i] - pmin[i-1] >= 0 && ps[n-1] - ps[i] >= 0){
-                found = true;
-                break;
-            }
-        }
+    if(a+1<b){
+        cout<<"YES"<<endl;
+        return;
     }
-    cout << (found ? "YES\n" : "NO\n");
+    if(check_prefix_and_middle(arr,n)){
+        cout<<"YES"<<endl;
+        return;
+    }
+    reverse(all(arr));
+    if(check_prefix_and_middle(arr,n)){
+        cout<<"YES"<<endl;
+        return;
+    }
+    cout<<"NO"<<endl;
 }
 
 signed main(){
